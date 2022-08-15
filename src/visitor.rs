@@ -120,14 +120,22 @@ pub trait ASTVisitor {
         self.enter_switch(switch);
         self.visit_expression(&switch.expression);
         switch.cases.iter().for_each(|c| {
-            if let Some(literal) = &c.literal {
-                self.visit_literal(literal);
-            }
-            self.visit_block(&c.body);
+            self.enter_case(&c);
+            self.visit_case(&c);
+            self.exit_case(&c);
         });
         self.exit_switch(switch);
     }
     fn exit_switch(&mut self, _x: &Switch) {}
+
+    fn enter_case(&mut self, _case: &Case) {}
+    fn visit_case(&mut self, case: &Case) {
+        if let Some(literal) = &case.literal {
+            self.visit_literal(literal);
+        }
+        self.visit_block(&case.body);
+    }
+    fn exit_case(&mut self, _case: &Case) {}
 
     fn enter_for(&mut self, _x: &ForLoop) {}
     fn visit_for(&mut self, for_loop: &ForLoop) {
@@ -284,14 +292,22 @@ pub trait ASTModifier {
         self.enter_switch(switch);
         self.visit_expression(&mut switch.expression);
         switch.cases.iter_mut().for_each(|c| {
-            if let Some(literal) = &mut c.literal {
-                self.visit_literal(literal);
-            }
-            self.visit_block(&mut c.body);
+            self.enter_case(c);
+            self.visit_case(c);
+            self.exit_case(c);
         });
         self.exit_switch(switch);
     }
     fn exit_switch(&mut self, _x: &mut Switch) {}
+
+    fn enter_case(&mut self, _case: &mut Case) {}
+    fn visit_case(&mut self, case: &mut Case) {
+        if let Some(literal) = &mut case.literal {
+            self.visit_literal(literal);
+        }
+        self.visit_block(&mut case.body);
+    }
+    fn exit_case(&mut self, _case: &mut Case) {}
 
     fn enter_for(&mut self, _x: &mut ForLoop) {}
     fn visit_for(&mut self, for_loop: &mut ForLoop) {
