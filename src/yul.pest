@@ -15,9 +15,9 @@ statement = {
 	)
 }
 
-function_definition = { "function" ~ identifier ~ "(" ~ (untyped_parameter_list)? ~ ")" ~ ("->" ~ untyped_identifier_list)? ~ block }
+function_definition = { "function" ~ identifier ~ "(" ~ (parameter_list)? ~ ")" ~ ("->" ~ identifier_list)? ~ block }
 
-variable_declaration = { "let" ~ untyped_identifier_list ~ (":=" ~ expression)? }
+variable_declaration = { "let" ~ identifier_list ~ (":=" ~ expression)? }
 
 assignment = { identifier_list ~ ":=" ~ expression }
 
@@ -43,18 +43,8 @@ function_call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
 
 identifier = @ { alpha ~ (alpha | digit)* }
 
+parameter_list = { identifier ~ ("," ~ identifier)* }
 identifier_list = { identifier ~ ("," ~ identifier)* }
-
-type_name = { builtin_typename | identifier }
-
-builtin_typename = { "bool" | "u8" | "u32" | "u64" | "u128" | "u256" | "s8" | "s32" | "s64" | "s128" | "s256" } // FIXME: this can probably be simplified
-
-typed_parameter_list = { typed_identifier ~ ("," ~ typed_identifier)* }
-typed_identifier_list = { typed_identifier ~ ("," ~ typed_identifier)* }
-untyped_parameter_list = { identifier ~ ("," ~ identifier)* }
-untyped_identifier_list = { identifier ~ ("," ~ identifier)* }
-
-typed_identifier = { identifier ~ ":" ~ type_name }
 
 literal = {
 	number_literal
