@@ -1,22 +1,6 @@
 use std::fmt;
 
 #[derive(Hash, Clone, PartialEq, Debug)]
-pub enum Type {
-    Bool,
-    Uint256,
-    Uint128,
-    Uint64,
-    Uint32,
-    Uint8,
-    Int256,
-    Int128,
-    Int64,
-    Int32,
-    Int8,
-    Custom(String),
-}
-
-#[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Block {
     pub statements: Vec<Statement>,
 }
@@ -118,25 +102,6 @@ pub enum Statement {
     Break,
     Continue,
     Leave,
-}
-
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Type::Bool => write!(f, "bool"),
-            Type::Uint256 => write!(f, "u256"),
-            Type::Uint128 => write!(f, "u128"),
-            Type::Uint64 => write!(f, "u64"),
-            Type::Uint32 => write!(f, "u32"),
-            Type::Uint8 => write!(f, "u8"),
-            Type::Int256 => write!(f, "i256"),
-            Type::Int128 => write!(f, "i128"),
-            Type::Int64 => write!(f, "i64"),
-            Type::Int32 => write!(f, "i32"),
-            Type::Int8 => write!(f, "i8"),
-            Type::Custom(ref name) => write!(f, "{}", name),
-        }
-    }
 }
 
 impl Identifier {
@@ -352,28 +317,6 @@ mod tests {
     }
 
     #[test]
-    fn literal_typed() {
-        assert_eq!(
-            Literal {
-                literal: "testliteral".to_string()
-            }
-            .to_string(),
-            "testliteral:u256"
-        );
-    }
-
-    #[test]
-    fn literal_custom_typed() {
-        assert_eq!(
-            Literal {
-                literal: "testliteral".to_string()
-            }
-            .to_string(),
-            "testliteral:memptr"
-        );
-    }
-
-    #[test]
     fn identifier() {
         assert_eq!(
             Identifier {
@@ -382,30 +325,6 @@ mod tests {
             }
             .to_string(),
             "testidentifier"
-        );
-    }
-
-    #[test]
-    fn identifier_typed() {
-        assert_eq!(
-            Identifier {
-                id: IdentifierID::Declaration(1),
-                name: "testidentifier".to_string()
-            }
-            .to_string(),
-            "testidentifier:u256"
-        );
-    }
-
-    #[test]
-    fn identifierr_custom_typed() {
-        assert_eq!(
-            Identifier {
-                id: IdentifierID::Declaration(1),
-                name: "testidentifier".to_string()
-            }
-            .to_string(),
-            "testidentifier:memptr"
         );
     }
 

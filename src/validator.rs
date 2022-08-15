@@ -60,33 +60,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn untyped_literal() {
+    fn literal() {
         assert!(
             !Literal {
                 literal: "test".to_string(),
-                yultype: None
-            }
-            .validate()
-            .is_err(),
-            ""
-        );
-        assert!(
-            Literal {
-                literal: "test".to_string(),
-                yultype: None
-            }
-            .validate()
-            .is_err(),
-            ""
-        );
-    }
-
-    #[test]
-    fn typed_literal() {
-        assert!(
-            !Literal {
-                literal: "test".to_string(),
-                yultype: Some(Type::Bool)
             }
             .validate()
             .is_err(),
