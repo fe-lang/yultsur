@@ -401,7 +401,6 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
-                    
                 }],
                 value: Expression::Literal(Literal {
                     literal: "1".to_string()
@@ -420,17 +419,14 @@ mod tests {
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "a".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "b".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "c".to_string(),
-                        
                     },
                 ],
                 value: Expression::Literal(Literal {
@@ -449,7 +445,6 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
-                    
                 }],
                 value: None,
             }
@@ -465,7 +460,6 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
-                    
                 }],
                 value: Some(Expression::Literal(Literal {
                     literal: "1".to_string()
@@ -484,17 +478,14 @@ mod tests {
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "a".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "b".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "c".to_string(),
-                        
                     },
                 ],
                 value: Some(Expression::Literal(Literal {
@@ -513,7 +504,6 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    
                 },
                 parameters: vec![],
                 returns: vec![],
@@ -531,12 +521,10 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    
                 },
                 parameters: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
-                    
                 }],
                 returns: vec![],
                 body: Block { statements: vec![] },
@@ -553,13 +541,11 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    
                 },
                 parameters: vec![],
                 returns: vec![Identifier {
                     id: IdentifierID::Declaration(2),
                     name: "a".to_string(),
-                    
                 }],
                 body: Block { statements: vec![] },
             }
@@ -575,30 +561,25 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    
                 },
                 parameters: vec![
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "a".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "b".to_string(),
-                        
                     },
                 ],
                 returns: vec![
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "c".to_string(),
-                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "d".to_string(),
-                        
                     },
                 ],
                 body: Block { statements: vec![] },

@@ -15,3 +15,11 @@ Planned:
 
 [Yul]: https://solidity.readthedocs.io/en/latest/yul.html
 [solc-rust]: https://github.com/axic/solc-rust
+
+## Development
+
+You can enable git hooks locally by running:
+
+```sh
+git config core.hooksPath .githooks
+```
