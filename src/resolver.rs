@@ -134,7 +134,6 @@ mod tests {
                     function: Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "add".to_string(),
-                        yultype: None,
                     },
                     arguments: vec![],
                 },

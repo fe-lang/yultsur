@@ -1,22 +1,6 @@
 use std::fmt;
 
 #[derive(Hash, Clone, PartialEq, Debug)]
-pub enum Type {
-    Bool,
-    Uint256,
-    Uint128,
-    Uint64,
-    Uint32,
-    Uint8,
-    Int256,
-    Int128,
-    Int64,
-    Int32,
-    Int8,
-    Custom(String),
-}
-
-#[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Block {
     pub statements: Vec<Statement>,
 }
@@ -24,7 +8,6 @@ pub struct Block {
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Literal {
     pub literal: String,
-    pub yultype: Option<Type>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -45,7 +28,6 @@ pub enum IdentifierID {
 pub struct Identifier {
     pub id: IdentifierID,
     pub name: String,
-    pub yultype: Option<Type>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -122,31 +104,11 @@ pub enum Statement {
     Leave,
 }
 
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Type::Bool => write!(f, "bool"),
-            Type::Uint256 => write!(f, "u256"),
-            Type::Uint128 => write!(f, "u128"),
-            Type::Uint64 => write!(f, "u64"),
-            Type::Uint32 => write!(f, "u32"),
-            Type::Uint8 => write!(f, "u8"),
-            Type::Int256 => write!(f, "i256"),
-            Type::Int128 => write!(f, "i128"),
-            Type::Int64 => write!(f, "i64"),
-            Type::Int32 => write!(f, "i32"),
-            Type::Int8 => write!(f, "i8"),
-            Type::Custom(ref name) => write!(f, "{}", name),
-        }
-    }
-}
-
 impl Identifier {
     pub fn new(identifier: &str, id: IdentifierID) -> Self {
         Identifier {
             id,
             name: identifier.to_string(),
-            yultype: None,
         }
     }
 }
@@ -155,30 +117,19 @@ impl Literal {
     pub fn new(literal: &str) -> Self {
         Literal {
             literal: literal.to_string(),
-            yultype: None,
         }
     }
 }
 
 impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.literal)?;
-        if let Some(yultype) = &self.yultype {
-            write!(f, ":{}", yultype)
-        } else {
-            write!(f, "")
-        }
+        write!(f, "{}", self.literal)
     }
 }
 
 impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.name)?;
-        if let Some(yultype) = &self.yultype {
-            write!(f, ":{}", yultype)
-        } else {
-            write!(f, "")
-        }
+        write!(f, "{}", self.name)
     }
 }
 
@@ -358,35 +309,10 @@ mod tests {
     fn literal() {
         assert_eq!(
             Literal {
-                literal: "testliteral".to_string(),
-                yultype: None,
+                literal: "testliteral".to_string()
             }
             .to_string(),
             "testliteral"
-        );
-    }
-
-    #[test]
-    fn literal_typed() {
-        assert_eq!(
-            Literal {
-                literal: "testliteral".to_string(),
-                yultype: Some(Type::Uint256),
-            }
-            .to_string(),
-            "testliteral:u256"
-        );
-    }
-
-    #[test]
-    fn literal_custom_typed() {
-        assert_eq!(
-            Literal {
-                literal: "testliteral".to_string(),
-                yultype: Some(Type::Custom("memptr".to_string())),
-            }
-            .to_string(),
-            "testliteral:memptr"
         );
     }
 
@@ -395,37 +321,10 @@ mod tests {
         assert_eq!(
             Identifier {
                 id: IdentifierID::UnresolvedReference,
-                name: "testidentifier".to_string(),
-                yultype: None,
+                name: "testidentifier".to_string()
             }
             .to_string(),
             "testidentifier"
-        );
-    }
-
-    #[test]
-    fn identifier_typed() {
-        assert_eq!(
-            Identifier {
-                id: IdentifierID::Declaration(1),
-                name: "testidentifier".to_string(),
-                yultype: Some(Type::Uint256),
-            }
-            .to_string(),
-            "testidentifier:u256"
-        );
-    }
-
-    #[test]
-    fn identifierr_custom_typed() {
-        assert_eq!(
-            Identifier {
-                id: IdentifierID::Declaration(1),
-                name: "testidentifier".to_string(),
-                yultype: Some(Type::Custom("memptr".to_string())),
-            }
-            .to_string(),
-            "testidentifier:memptr"
         );
     }
 
@@ -435,18 +334,15 @@ mod tests {
             FunctionCall {
                 function: Identifier {
                     id: IdentifierID::UnresolvedReference,
-                    name: "test".to_string(),
-                    yultype: None,
+                    name: "test".to_string()
                 },
                 arguments: vec![
                     Expression::Identifier(Identifier {
                         id: IdentifierID::UnresolvedReference,
-                        name: "test".to_string(),
-                        yultype: None,
+                        name: "test".to_string()
                     }),
                     Expression::Literal(Literal {
-                        literal: "literal".to_string(),
-                        yultype: None,
+                        literal: "literal".to_string()
                     }),
                 ],
             }
@@ -460,8 +356,7 @@ mod tests {
         assert_eq!(
             If {
                 condition: Expression::Literal(Literal {
-                    literal: "literal".to_string(),
-                    yultype: None,
+                    literal: "literal".to_string()
                 }),
                 body: Block { statements: vec![] },
             }
@@ -491,8 +386,7 @@ mod tests {
         assert_eq!(
             Block {
                 statements: vec![Statement::Expression(Expression::Literal(Literal {
-                    literal: "literal".to_string(),
-                    yultype: None,
+                    literal: "literal".to_string()
                 }))],
             }
             .to_string(),
@@ -507,11 +401,10 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
-                    yultype: None,
+                    
                 }],
                 value: Expression::Literal(Literal {
-                    literal: "1".to_string(),
-                    yultype: None,
+                    literal: "1".to_string()
                 }),
             }
             .to_string(),
@@ -527,22 +420,21 @@ mod tests {
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "a".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "b".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "c".to_string(),
-                        yultype: None,
+                        
                     },
                 ],
                 value: Expression::Literal(Literal {
-                    literal: "1".to_string(),
-                    yultype: None,
+                    literal: "1".to_string()
                 }),
             }
             .to_string(),
@@ -557,7 +449,7 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
-                    yultype: None,
+                    
                 }],
                 value: None,
             }
@@ -573,11 +465,10 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
-                    yultype: None,
+                    
                 }],
                 value: Some(Expression::Literal(Literal {
-                    literal: "1".to_string(),
-                    yultype: None,
+                    literal: "1".to_string()
                 })),
             }
             .to_string(),
@@ -593,22 +484,21 @@ mod tests {
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "a".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "b".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "c".to_string(),
-                        yultype: None,
+                        
                     },
                 ],
                 value: Some(Expression::Literal(Literal {
-                    literal: "1".to_string(),
-                    yultype: None,
+                    literal: "1".to_string()
                 })),
             }
             .to_string(),
@@ -623,7 +513,7 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    yultype: None,
+                    
                 },
                 parameters: vec![],
                 returns: vec![],
@@ -641,12 +531,12 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    yultype: None,
+                    
                 },
                 parameters: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
-                    yultype: None,
+                    
                 }],
                 returns: vec![],
                 body: Block { statements: vec![] },
@@ -663,13 +553,13 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    yultype: None,
+                    
                 },
                 parameters: vec![],
                 returns: vec![Identifier {
                     id: IdentifierID::Declaration(2),
                     name: "a".to_string(),
-                    yultype: None,
+                    
                 }],
                 body: Block { statements: vec![] },
             }
@@ -685,30 +575,30 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
-                    yultype: None,
+                    
                 },
                 parameters: vec![
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "a".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "b".to_string(),
-                        yultype: None,
+                        
                     },
                 ],
                 returns: vec![
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "c".to_string(),
-                        yultype: None,
+                        
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "d".to_string(),
-                        yultype: None,
+                        
                     },
                 ],
                 body: Block { statements: vec![] },
@@ -723,8 +613,7 @@ mod tests {
         assert_eq!(
             Case {
                 literal: Some(Literal {
-                    literal: "literal".to_string(),
-                    yultype: None,
+                    literal: "literal".to_string()
                 }),
                 body: Block { statements: vec![] },
             }
@@ -750,14 +639,12 @@ mod tests {
         assert_eq!(
             Switch {
                 expression: Expression::Literal(Literal {
-                    literal: "3".to_string(),
-                    yultype: None,
+                    literal: "3".to_string()
                 }),
                 cases: vec![
                     Case {
                         literal: Some(Literal {
-                            literal: "1".to_string(),
-                            yultype: None,
+                            literal: "1".to_string()
                         }),
                         body: Block { statements: vec![] },
                     },
@@ -778,8 +665,7 @@ mod tests {
             ForLoop {
                 pre: Block { statements: vec![] },
                 condition: Expression::Literal(Literal {
-                    literal: "1".to_string(),
-                    yultype: None,
+                    literal: "1".to_string()
                 }),
                 post: Block { statements: vec![] },
                 body: Block { statements: vec![] },

@@ -18,42 +18,23 @@ fn file_to_string(path: &str) -> String {
 }
 
 impl Identifier {
-    fn from(pair: Pair<Rule>) -> String {
-        pair.as_str().to_string()
-    }
-
-    fn from_untyped(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
-        let name = Identifier::from(pair);
+    fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
+        let name = pair.as_str().to_string();
 
         // TOOD much nicer to call some function that returns the id
         *next_identifier += 1;
         Identifier {
             id: IdentifierID::Declaration(*next_identifier),
             name,
-            yultype: None,
         }
     }
 
-    fn from_untyped_reference(pair: Pair<Rule>) -> Identifier {
-        let name = Identifier::from(pair);
+    fn from_reference(pair: Pair<Rule>) -> Identifier {
+        let name = pair.as_str().to_string();
 
         Identifier {
             id: IdentifierID::UnresolvedReference,
             name,
-            yultype: None,
-        }
-    }
-
-    fn from_typed(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
-        let mut token_iter = pair.into_inner();
-        let name = Identifier::from(token_iter.next().unwrap());
-        let yultype = token_iter.next().map(|t| Type::from(t));
-
-        *next_identifier += 1;
-        Identifier {
-            id: IdentifierID::Declaration(*next_identifier),
-            name,
-            yultype,
         }
     }
 
@@ -62,7 +43,7 @@ impl Identifier {
         for p in pair.into_inner() {
             match p.as_rule() {
                 Rule::identifier => {
-                    identifiers.push(Identifier::from_untyped(p, next_identifier));
+                    identifiers.push(Identifier::from(p, next_identifier));
                 }
                 _ => unreachable!(),
             }
@@ -75,66 +56,28 @@ impl Identifier {
         for p in pair.into_inner() {
             match p.as_rule() {
                 Rule::identifier => {
-                    identifiers.push(Identifier::from_untyped_reference(p));
+                    identifiers.push(Identifier::from_reference(p));
                 }
                 _ => unreachable!(),
             }
         }
         identifiers
-    }
-
-    fn list_typed(pair: Pair<Rule>, next_identifier: &mut u64) -> Vec<Identifier> {
-        let mut identifiers: Vec<Identifier> = vec![];
-        for p in pair.into_inner() {
-            match p.as_rule() {
-                Rule::typed_identifier => {
-                    identifiers.push(Identifier::from_typed(p, next_identifier));
-                }
-                _ => unreachable!(),
-            }
-        }
-        identifiers
-    }
-}
-
-impl Type {
-    fn from(pair: Pair<Rule>) -> Type {
-        let current = pair.into_inner().next().unwrap();
-        match current.as_rule() {
-            Rule::identifier => Type::Custom(Identifier::from(current)),
-            Rule::builtin_typename => match current.as_str() {
-                "bool" => Type::Bool,
-                "u8" => Type::Uint8,
-                "u32" => Type::Uint32,
-                "u64" => Type::Uint64,
-                "u128" => Type::Uint128,
-                "u256" => Type::Uint256,
-                "s8" => Type::Int8,
-                "s32" => Type::Int32,
-                "s64" => Type::Int64,
-                "s128" => Type::Int128,
-                "s256" => Type::Int256,
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        }
     }
 }
 
 impl Literal {
     fn from(pair: Pair<Rule>) -> Literal {
         let mut token_iter = pair.into_inner();
-        let literal = Identifier::from(token_iter.next().unwrap());
-        let yultype = token_iter.next().map(|t| Type::from(t));
+        let literal = token_iter.next().unwrap().as_str().to_string();
 
-        Literal { literal, yultype }
+        Literal { literal }
     }
 }
 
 impl FunctionCall {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionCall {
         let mut token_iter = pair.into_inner();
-        let function = Identifier::from_untyped_reference(token_iter.next().unwrap());
+        let function = Identifier::from_reference(token_iter.next().unwrap());
         let arguments = token_iter
             .map(|p| match p.as_rule() {
                 Rule::expression => Expression::from(p, next_identifier),
@@ -155,7 +98,7 @@ impl Expression {
         let p = token_iter.next().unwrap();
         match p.as_rule() {
             Rule::function_call => Expression::FunctionCall(FunctionCall::from(p, next_identifier)),
-            Rule::identifier => Expression::Identifier(Identifier::from_untyped_reference(p)),
+            Rule::identifier => Expression::Identifier(Identifier::from_reference(p)),
             Rule::literal => Expression::Literal(Literal::from(p)),
             _ => unreachable!(),
         }
@@ -227,26 +170,18 @@ impl VariableDeclaration {
 impl FunctionDefinition {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionDefinition {
         let mut token_iter = pair.into_inner();
-        let name = Identifier::from_untyped(token_iter.next().unwrap(), next_identifier);
+        let name = Identifier::from(token_iter.next().unwrap(), next_identifier);
 
         let current = token_iter.next().unwrap();
         let (parameters, current) = match current.as_rule() {
-            Rule::typed_parameter_list => (
-                Identifier::list_typed(current, next_identifier),
-                token_iter.next().unwrap(),
-            ),
-            Rule::untyped_parameter_list => (
+            Rule::parameter_list => (
                 Identifier::list(current, next_identifier),
                 token_iter.next().unwrap(),
             ),
             _ => (vec![], current),
         };
         let (returns, current) = match current.as_rule() {
-            Rule::typed_identifier_list => (
-                Identifier::list_typed(current, next_identifier),
-                token_iter.next().unwrap(),
-            ),
-            Rule::untyped_identifier_list => (
+            Rule::identifier_list => (
                 Identifier::list(current, next_identifier),
                 token_iter.next().unwrap(),
             ),
@@ -388,11 +323,6 @@ mod tests {
     #[test]
     fn empty_block() {
         test_file("examples/empty_block.yul");
-    }
-
-    #[test]
-    fn untyped() {
-        test_file("examples/untyped.yul");
     }
 
     #[test]
