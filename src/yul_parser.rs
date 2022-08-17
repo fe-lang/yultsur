@@ -330,8 +330,7 @@ pub fn parse_block(source: &str) -> Block {
 mod tests {
     use super::*;
 
-    use std::fs::{File, read_to_string};
-    use std::io::prelude::*;
+    use std::fs::read_to_string;
 
     #[test]
     fn continue_statement() {
