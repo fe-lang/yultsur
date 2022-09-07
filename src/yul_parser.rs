@@ -7,16 +7,6 @@ use pest::Parser;
 #[grammar = "yul.pest"]
 struct BlockParser;
 
-use std::fs::File;
-use std::io::prelude::*;
-
-fn file_to_string(path: &str) -> String {
-    let mut file = File::open(path).unwrap();
-    let mut content = String::new();
-    file.read_to_string(&mut content).unwrap();
-    content
-}
-
 impl Identifier {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
         let name = pair.as_str().to_string();
@@ -275,6 +265,8 @@ pub fn parse_block(source: &str) -> Block {
 mod tests {
     use super::*;
 
+    use std::fs::read_to_string;
+
     #[test]
     fn continue_statement() {
         test_file("examples/continue.yul");
@@ -336,7 +328,7 @@ mod tests {
     }
 
     fn test_file(filename: &str) {
-        let source = file_to_string(filename);
+        let source = read_to_string(filename).unwrap();
         let block = parse_block(&source);
         assert_eq!(source, block.to_string());
     }

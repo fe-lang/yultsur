@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 use visitor::ASTModifier;
 use yul::*;
 
@@ -17,7 +17,7 @@ struct Resolver<D: Dialect> {
     active_functions: Vec<HashMap<String, u64>>,
     function_signatures: HashMap<u64, FunctionSignature>,
     // TODO we should not need that.
-    dialect: D,
+    marker: PhantomData<D>,
 }
 
 pub struct FunctionSignature {
@@ -40,7 +40,7 @@ impl<D: Dialect> Resolver<D> {
             active_variables: Vec::new(),
             active_functions: Vec::new(),
             function_signatures: HashMap::new(),
-            dialect: D::new(),
+            marker: PhantomData,
         }
     }
     fn activate_variable(&mut self, symbol: &Identifier) {
