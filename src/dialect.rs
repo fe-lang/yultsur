@@ -1,6 +1,4 @@
 pub trait Dialect {
-    // TODO we actually should not need that.
-    fn new() -> Self;
     fn is_builtin(name: &str) -> bool {
         Self::builtin(name).is_some()
     }
@@ -32,9 +30,6 @@ fn b(name: &str, parameters: u64, returns: u64) -> Option<Builtin> {
 // TODO macro to avoid repetition?
 
 impl Dialect for EVMDialect {
-    fn new() -> Self {
-        EVMDialect {}
-    }
     fn builtin(name: &str) -> Option<Builtin> {
         match name {
             "stop" => b("stop", 0, 0),
