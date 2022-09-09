@@ -1,4 +1,4 @@
-use yul::*;
+use crate::yul::*;
 
 pub trait FallibleASTVisitor {
     type Error;

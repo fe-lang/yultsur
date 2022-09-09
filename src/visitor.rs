@@ -1,4 +1,4 @@
-use yul::*;
+use crate::yul::*;
 
 pub trait ASTVisitor {
     fn enter_statement(&mut self, _st: &Statement) {}

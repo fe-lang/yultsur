@@ -1,4 +1,4 @@
-use yul::*;
+use crate::yul::*;
 
 use crate::fallible_visitor::FallibleASTVisitor;
 
