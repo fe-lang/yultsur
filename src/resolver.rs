@@ -1,8 +1,8 @@
+use crate::visitor::ASTModifier;
+use crate::yul::*;
 use std::{collections::BTreeMap, collections::HashMap, marker::PhantomData};
-use visitor::ASTModifier;
-use yul::*;
 
-use dialect::Dialect;
+use crate::dialect::Dialect;
 
 /// Resolves all references in the given AST and returns a
 /// hash map from id to function signature for each user-defined function.
@@ -124,7 +124,7 @@ impl<D: Dialect> ASTModifier for Resolver<D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dialect::EVMDialect;
+    use crate::dialect::EVMDialect;
 
     #[test]
     fn with_dialect() {
