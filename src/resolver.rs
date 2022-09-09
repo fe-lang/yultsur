@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData};
+use std::{collections::BTreeMap, collections::HashMap, marker::PhantomData};
 use visitor::ASTModifier;
 use yul::*;
 
@@ -6,7 +6,7 @@ use dialect::Dialect;
 
 /// Resolves all references in the given AST and returns a
 /// hash map from id to function signature for each user-defined function.
-pub fn resolve<D: Dialect>(ast: &mut Block) -> HashMap<u64, FunctionSignature> {
+pub fn resolve<D: Dialect>(ast: &mut Block) -> BTreeMap<u64, FunctionSignature> {
     let mut r = Resolver::<D>::new();
     r.visit_block(ast);
     std::mem::take(&mut r.function_signatures)
@@ -15,7 +15,7 @@ pub fn resolve<D: Dialect>(ast: &mut Block) -> HashMap<u64, FunctionSignature> {
 struct Resolver<D: Dialect> {
     active_variables: Vec<HashMap<String, u64>>,
     active_functions: Vec<HashMap<String, u64>>,
-    function_signatures: HashMap<u64, FunctionSignature>,
+    function_signatures: BTreeMap<u64, FunctionSignature>,
     // TODO we should not need that.
     marker: PhantomData<D>,
 }
@@ -39,7 +39,7 @@ impl<D: Dialect> Resolver<D> {
         Resolver::<D> {
             active_variables: Vec::new(),
             active_functions: Vec::new(),
-            function_signatures: HashMap::new(),
+            function_signatures: BTreeMap::new(),
             marker: PhantomData,
         }
     }
