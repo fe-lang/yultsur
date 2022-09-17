@@ -174,11 +174,11 @@ mod tests {
     #[test]
     fn test_resolve_inside() {
         let source = "{ let x := 7 function f(a, b) -> c {} let y := 9 }";
-        let mut block = parse_block(&source);
+        let mut block = parse_block(&source).unwrap();
         resolve::<EVMDialect>(&mut block);
-        let mut expr_x = parse_expression(&"x");
-        let mut expr_f = parse_expression(&"f");
-        let mut expr_y = parse_expression(&"y");
+        let mut expr_x = parse_expression(&"x").unwrap();
+        let mut expr_f = parse_expression(&"f").unwrap();
+        let mut expr_y = parse_expression(&"y").unwrap();
         resolve_inside::<EVMDialect>(&mut expr_x, &block);
         assert_eq!(
             expr_x,

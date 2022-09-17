@@ -255,21 +255,29 @@ impl Block {
     }
 }
 
-pub fn parse_block(source: &str) -> Block {
-    let mut pairs = BlockParser::parse(Rule::block, source).unwrap();
-    let mut next_identifier = 1u64;
-    Block::from(pairs.next().unwrap(), &mut next_identifier)
+pub fn parse_block(source: &str) -> Result<Block, String> {
+    match BlockParser::parse(Rule::block, source) {
+        Ok(mut pairs) => {
+            let mut next_identifier = 1u64;
+            Ok(Block::from(pairs.next().unwrap(), &mut next_identifier))
+        }
+        Err(error) => Err(format!("{}", error)),
+    }
 }
 
-pub fn parse_expression(source: &str) -> Expression {
+pub fn parse_expression(source: &str) -> Result<Expression, String> {
     let block_source = format!("{{ {} }}", source);
-    let mut pairs = BlockParser::parse(Rule::block, block_source.as_str()).unwrap();
-    let mut next_identifier = 1u64;
-    let mut block = Block::from(pairs.next().unwrap(), &mut next_identifier);
-    if let Statement::Expression(e) = block.statements.pop().unwrap() {
-        e
-    } else {
-        panic!();
+    match BlockParser::parse(Rule::block, block_source.as_str()) {
+        Err(error) => Err(format!("{}", error)),
+        Ok(mut pairs) => {
+            let mut next_identifier = 1u64;
+            let mut block = Block::from(pairs.next().unwrap(), &mut next_identifier);
+            if let Statement::Expression(e) = block.statements.pop().unwrap() {
+                Ok(e)
+            } else {
+                panic!();
+            }
+        }
     }
 }
 
@@ -347,13 +355,13 @@ mod tests {
     #[test]
     fn comments() {
         let source = "{ /* abc */ let x // def\n := 7 }// xx";
-        let block = parse_block(&source);
+        let block = parse_block(&source).unwrap();
         assert_eq!(block.to_string(), "{ let x := 7 }");
     }
 
     fn test_file(filename: &str) {
         let source = read_to_string(filename).unwrap();
-        let block = parse_block(&source);
+        let block = parse_block(&source).unwrap();
         assert_eq!(source, block.to_string());
     }
 }
