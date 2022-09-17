@@ -161,10 +161,13 @@ mod tests {
                     function: Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "add".to_string(),
+                        location: None,
                     },
                     arguments: vec![],
+                    location: None,
                 },
             ))],
+            location: None,
         };
         resolve::<EVMDialect>(&mut ast);
     }
@@ -184,7 +187,9 @@ mod tests {
             expr_x,
             Expression::Identifier(Identifier {
                 id: IdentifierID::Reference(2),
-                name: "x".to_string()
+                name: "x".to_string(),
+                // NOTE: It's not 0-1 because parse_expression() internally converts the expression to `{ x }`
+                location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );
         resolve_inside::<EVMDialect>(&mut expr_f, &block);
@@ -192,7 +197,8 @@ mod tests {
             expr_f,
             Expression::Identifier(Identifier {
                 id: IdentifierID::Reference(3),
-                name: "f".to_string()
+                name: "f".to_string(),
+                location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );
         resolve_inside::<EVMDialect>(&mut expr_y, &block);
@@ -200,7 +206,8 @@ mod tests {
             expr_y,
             Expression::Identifier(Identifier {
                 id: IdentifierID::Reference(7),
-                name: "y".to_string()
+                name: "y".to_string(),
+                location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );
     }

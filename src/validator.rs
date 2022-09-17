@@ -35,6 +35,7 @@ mod tests {
             !Validator::default()
                 .visit_literal(&Literal {
                     literal: "test".to_string(),
+                    location: None,
                 })
                 .is_err(),
             ""
@@ -48,8 +49,13 @@ mod tests {
                 .visit_case(&Case {
                     literal: Some(Literal {
                         literal: "".to_string(),
+                        location: None,
                     }),
-                    body: Block { statements: vec![] },
+                    body: Block {
+                        statements: vec![],
+                        location: None
+                    },
+                    location: None,
                 })
                 .is_err(),
             ""
@@ -65,20 +71,32 @@ mod tests {
                         expression: Expression::Identifier(Identifier {
                             id: IdentifierID::UnresolvedReference,
                             name: "shouldbebool".to_string(),
+                            location: None,
                         }),
                         cases: vec![
                             Case {
                                 literal: Some(Literal {
                                     literal: "true".to_string(),
+                                    location: None,
                                 }),
-                                body: Block { statements: vec![] },
+                                body: Block {
+                                    statements: vec![],
+                                    location: None
+                                },
+                                location: None,
                             },
                             Case {
                                 literal: None,
-                                body: Block { statements: vec![] },
+                                body: Block {
+                                    statements: vec![],
+                                    location: None
+                                },
+                                location: None,
                             },
                         ],
+                        location: None,
                     })],
+                    location: None,
                 })
                 .is_err(),
             ""
