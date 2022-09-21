@@ -110,6 +110,8 @@ impl Dialect for EVMDialect {
             "revert" => b("revert", 2, 0),
             "invalid" => b("invalid", 0, 0),
             "selfdestruct" => b("selfdestruct", 1, 0),
+
+            "memoryguard" => b("memoryguard", 1, 1),
             _ => None,
         }
     }
@@ -128,5 +130,6 @@ mod tests {
         assert!(!EVMDialect::is_builtin("jump"));
         assert!(!EVMDialect::is_builtin("jumpi"));
         assert!(!EVMDialect::is_builtin("pc"));
+        assert!(EVMDialect::is_builtin("memoryguard"));
     }
 }
