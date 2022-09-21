@@ -327,6 +327,11 @@ mod tests {
         test_file("examples/leave.yul");
     }
 
+    #[test]
+    fn special_identifiers() {
+        test_file("examples/special_identifiers.yul");
+    }
+
     fn test_file(filename: &str) {
         let source = read_to_string(filename).unwrap();
         let block = parse_block(&source);
