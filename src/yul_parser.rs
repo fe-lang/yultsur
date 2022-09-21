@@ -332,6 +332,13 @@ mod tests {
         test_file("examples/special_identifiers.yul");
     }
 
+    #[test]
+    fn comments() {
+        let source = "{ /* abc */ let x // def\n := 7 }// xx";
+        let block = parse_block(&source);
+        assert_eq!(block.to_string(), "{ let x := 7 }");
+    }
+
     fn test_file(filename: &str) {
         let source = read_to_string(filename).unwrap();
         let block = parse_block(&source);
