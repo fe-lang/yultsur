@@ -185,9 +185,9 @@ pub trait FallibleASTVisitor {
         self.enter_switch(switch)?;
         self.visit_expression(&switch.expression)?;
         for c in &switch.cases {
-            self.enter_case(&c)?;
-            self.visit_case(&c)?;
-            self.exit_case(&c)?;
+            self.enter_case(c)?;
+            self.visit_case(c)?;
+            self.exit_case(c)?;
         }
         self.exit_switch(switch)
     }

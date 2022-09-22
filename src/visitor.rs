@@ -120,9 +120,9 @@ pub trait ASTVisitor {
         self.enter_switch(switch);
         self.visit_expression(&switch.expression);
         switch.cases.iter().for_each(|c| {
-            self.enter_case(&c);
-            self.visit_case(&c);
-            self.exit_case(&c);
+            self.enter_case(c);
+            self.visit_case(c);
+            self.exit_case(c);
         });
         self.exit_switch(switch);
     }
