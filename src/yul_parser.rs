@@ -256,9 +256,21 @@ impl Block {
 }
 
 pub fn parse_block(source: &str) -> Block {
-    let mut pairs = BlockParser::parse(Rule::block, &source).unwrap();
+    let mut pairs = BlockParser::parse(Rule::block, source).unwrap();
     let mut next_identifier = 1u64;
     Block::from(pairs.next().unwrap(), &mut next_identifier)
+}
+
+pub fn parse_expression(source: &str) -> Expression {
+    let block_source = format!("{{ {} }}", source);
+    let mut pairs = BlockParser::parse(Rule::block, block_source.as_str()).unwrap();
+    let mut next_identifier = 1u64;
+    let mut block = Block::from(pairs.next().unwrap(), &mut next_identifier);
+    if let Statement::Expression(e) = block.statements.pop().unwrap() {
+        e
+    } else {
+        panic!();
+    }
 }
 
 #[cfg(test)]

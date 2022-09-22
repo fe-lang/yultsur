@@ -12,6 +12,20 @@ pub fn resolve<D: Dialect>(ast: &mut Block) -> BTreeMap<u64, FunctionSignature> 
     std::mem::take(&mut r.function_signatures)
 }
 
+/// Resolves all references in `to_resolve` given an already resolved ast `reference`.
+/// This can be used to resolve e.g. an expression to be evaluated.
+/// This only considers symbols defined at the top level of the reference block.
+pub fn resolve_inside<D: Dialect>(to_resolve: &mut Expression, reference: &Block) {
+    let mut r = Resolver::<D>::new();
+    r.enter_block_immut(reference);
+    for statement in &reference.statements {
+        if let Statement::VariableDeclaration(var) = &statement {
+            r.exit_variable_declaration_immut(var);
+        }
+    }
+    r.visit_expression(to_resolve);
+}
+
 struct Resolver<D: Dialect> {
     active_variables: Vec<HashMap<String, u64>>,
     active_functions: Vec<HashMap<String, u64>>,
@@ -69,10 +83,8 @@ impl<D: Dialect> Resolver<D> {
         assert!(false);
         IdentifierID::UnresolvedReference
     }
-}
 
-impl<D: Dialect> ASTModifier for Resolver<D> {
-    fn enter_block(&mut self, block: &mut Block) {
+    fn enter_block_immut(&mut self, block: &Block) {
         self.active_variables.push(HashMap::new());
         self.active_functions.push(HashMap::new());
         for st in &block.statements {
@@ -95,14 +107,28 @@ impl<D: Dialect> ASTModifier for Resolver<D> {
             }
         }
     }
-    fn exit_block(&mut self, _block: &mut Block) {
+
+    fn exit_block_immut(&mut self) {
         self.active_variables.pop();
         self.active_functions.pop();
     }
-    fn exit_variable_declaration(&mut self, variables: &mut VariableDeclaration) {
+
+    fn exit_variable_declaration_immut(&mut self, variables: &VariableDeclaration) {
         for var in &variables.variables {
             self.activate_variable(var);
         }
+    }
+}
+
+impl<D: Dialect> ASTModifier for Resolver<D> {
+    fn enter_block(&mut self, block: &mut Block) {
+        self.enter_block_immut(block);
+    }
+    fn exit_block(&mut self, _block: &mut Block) {
+        self.exit_block_immut();
+    }
+    fn exit_variable_declaration(&mut self, variables: &mut VariableDeclaration) {
+        self.exit_variable_declaration_immut(variables);
     }
     fn exit_identifier(&mut self, mut identifier: &mut Identifier) {
         if identifier.id == IdentifierID::UnresolvedReference {
@@ -140,5 +166,41 @@ mod tests {
             ))],
         };
         resolve::<EVMDialect>(&mut ast);
+    }
+
+    use crate::yul_parser::{parse_block, parse_expression};
+
+    #[test]
+    fn test_resolve_inside() {
+        let source = "{ let x := 7 function f(a, b) -> c {} let y := 9 }";
+        let mut block = parse_block(&source);
+        resolve::<EVMDialect>(&mut block);
+        let mut expr_x = parse_expression(&"x");
+        let mut expr_f = parse_expression(&"f");
+        let mut expr_y = parse_expression(&"y");
+        resolve_inside::<EVMDialect>(&mut expr_x, &block);
+        assert_eq!(
+            expr_x,
+            Expression::Identifier(Identifier {
+                id: IdentifierID::Reference(2),
+                name: "x".to_string()
+            })
+        );
+        resolve_inside::<EVMDialect>(&mut expr_f, &block);
+        assert_eq!(
+            expr_f,
+            Expression::Identifier(Identifier {
+                id: IdentifierID::Reference(3),
+                name: "f".to_string()
+            })
+        );
+        resolve_inside::<EVMDialect>(&mut expr_y, &block);
+        assert_eq!(
+            expr_y,
+            Expression::Identifier(Identifier {
+                id: IdentifierID::Reference(7),
+                name: "y".to_string()
+            })
+        );
     }
 }
