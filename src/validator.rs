@@ -17,7 +17,7 @@ impl FallibleASTVisitor for Validator {
 
     fn visit_case(&mut self, case: &Case) -> Result<(), Self::Error> {
         if let Some(literal) = &case.literal {
-            if literal.literal.len() == 0 {
+            if literal.literal.is_empty() {
                 return Err("Case literal cannot be empty".to_string());
             }
         }

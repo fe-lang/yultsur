@@ -66,6 +66,7 @@ impl<D: Dialect> Resolver<D> {
         if let Some(id) = find_symbol(&self.active_functions, symbol) {
             return IdentifierID::Reference(id);
         }
+        // TODO replace by erorr handling.
         assert!(false);
         IdentifierID::UnresolvedReference
     }

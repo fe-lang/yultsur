@@ -162,7 +162,7 @@ impl fmt::Display for FunctionDefinition {
                 .join(", ")
         )?;
         write!(f, ")")?;
-        if self.returns.len() > 0 {
+        if !self.returns.is_empty() {
             write!(f, " -> ")?;
             write!(
                 f,
@@ -181,7 +181,7 @@ impl fmt::Display for FunctionDefinition {
 impl fmt::Display for VariableDeclaration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // FIXME: should validate this on the new/default trait
-        if self.variables.len() == 0 {
+        if self.variables.is_empty() {
             panic!("VariableDeclaration must have identifiers")
         }
         write!(f, "let ")?;
@@ -205,7 +205,7 @@ impl fmt::Display for VariableDeclaration {
 impl fmt::Display for Assignment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // FIXME: should validate this on the new/default trait
-        if self.variables.len() == 0 {
+        if self.variables.is_empty() {
             panic!("Assignment must have identifiers")
         }
         write!(
@@ -241,7 +241,7 @@ impl fmt::Display for Case {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(literal) = &self.literal {
             // FIXME: should validate this on the new/default trait
-            if literal.literal.len() == 0 {
+            if literal.literal.is_empty() {
                 panic!("Case with literal should not be empty");
             }
             write!(f, "case {} {}", literal, self.body)
