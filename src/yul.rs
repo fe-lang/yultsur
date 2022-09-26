@@ -126,7 +126,7 @@ impl Identifier {
         Identifier {
             id,
             name: identifier.to_string(),
-            location: location,
+            location,
         }
     }
 }
@@ -135,7 +135,7 @@ impl Literal {
     pub fn new(literal: &str, location: Option<SourceLocation>) -> Self {
         Literal {
             literal: literal.to_string(),
-            location: location,
+            location,
         }
     }
 }

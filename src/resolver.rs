@@ -6,16 +6,23 @@ use crate::dialect::Dialect;
 
 /// Resolves all references in the given AST and returns a
 /// hash map from id to function signature for each user-defined function.
-pub fn resolve<D: Dialect>(ast: &mut Block) -> BTreeMap<u64, FunctionSignature> {
+pub fn resolve<D: Dialect>(ast: &mut Block) -> Result<BTreeMap<u64, FunctionSignature>, String> {
     let mut r = Resolver::<D>::new();
     r.visit_block(ast);
-    std::mem::take(&mut r.function_signatures)
+    if r.errors.is_empty() {
+        Ok(std::mem::take(&mut r.function_signatures))
+    } else {
+        Err(r.errors.join("\n"))
+    }
 }
 
 /// Resolves all references in `to_resolve` given an already resolved ast `reference`.
 /// This can be used to resolve e.g. an expression to be evaluated.
 /// This only considers symbols defined at the top level of the reference block.
-pub fn resolve_inside<D: Dialect>(to_resolve: &mut Expression, reference: &Block) {
+pub fn resolve_inside<D: Dialect>(
+    to_resolve: &mut Expression,
+    reference: &Block,
+) -> Result<(), String> {
     let mut r = Resolver::<D>::new();
     r.enter_block_immut(reference);
     for statement in &reference.statements {
@@ -24,6 +31,11 @@ pub fn resolve_inside<D: Dialect>(to_resolve: &mut Expression, reference: &Block
         }
     }
     r.visit_expression(to_resolve);
+    if r.errors.is_empty() {
+        Ok(())
+    } else {
+        Err(r.errors.join("\n"))
+    }
 }
 
 struct Resolver<D: Dialect> {
@@ -32,8 +44,10 @@ struct Resolver<D: Dialect> {
     function_signatures: BTreeMap<u64, FunctionSignature>,
     // TODO we should not need that.
     marker: PhantomData<D>,
+    errors: Vec<String>,
 }
 
+#[derive(Debug)]
 pub struct FunctionSignature {
     pub parameters: u64,
     pub returns: u64,
@@ -55,24 +69,31 @@ impl<D: Dialect> Resolver<D> {
             active_functions: Vec::new(),
             function_signatures: BTreeMap::new(),
             marker: PhantomData,
+            errors: Vec::new(),
         }
     }
     fn activate_variable(&mut self, symbol: &Identifier) {
-        // TODO error handling: the variable should not already be there.
         if let IdentifierID::Declaration(id) = symbol.id {
-            self.active_variables
+            if self
+                .active_variables
                 .last_mut()
                 .unwrap()
-                .insert(symbol.name.clone(), id);
+                .insert(symbol.name.clone(), id)
+                .is_some()
+            {
+                self.errors.push(format!(
+                    "Identifier \"{}\" already declared at this point.",
+                    symbol.name
+                ))
+            }
         } else {
             panic!()
         }
     }
-    fn resolve(&self, symbol: &String) -> IdentifierID {
+    fn resolve(&mut self, symbol: &String) -> IdentifierID {
         if D::is_builtin(symbol.as_str()) {
             return IdentifierID::BuiltinReference;
         }
-        // TODO error handling?
         // TODO we should not find it in both.
         if let Some(id) = find_symbol(&self.active_variables, symbol) {
             return IdentifierID::Reference(id);
@@ -80,8 +101,7 @@ impl<D: Dialect> Resolver<D> {
         if let Some(id) = find_symbol(&self.active_functions, symbol) {
             return IdentifierID::Reference(id);
         }
-        // TODO replace by erorr handling.
-        assert!(false);
+        self.errors.push(format!("Symbol not found: \"{symbol}\""));
         IdentifierID::UnresolvedReference
     }
 
@@ -91,10 +111,16 @@ impl<D: Dialect> Resolver<D> {
         for st in &block.statements {
             if let Statement::FunctionDefinition(f) = st {
                 if let IdentifierID::Declaration(id) = f.name.id {
-                    self.active_functions
+                    if self
+                        .active_functions
                         .last_mut()
                         .unwrap()
-                        .insert(f.name.name.clone(), id);
+                        .insert(f.name.name.clone(), id)
+                        .is_some()
+                    {
+                        self.errors
+                            .push(format!("Function \"{}\" already declared.", f.name))
+                    }
                     self.function_signatures.insert(
                         id,
                         FunctionSignature {
@@ -152,6 +178,7 @@ impl<D: Dialect> ASTModifier for Resolver<D> {
 mod tests {
     use super::*;
     use crate::dialect::EVMDialect;
+    use crate::yul_parser::{parse_block, parse_expression};
 
     #[test]
     fn with_dialect() {
@@ -169,20 +196,18 @@ mod tests {
             ))],
             location: None,
         };
-        resolve::<EVMDialect>(&mut ast);
+        resolve::<EVMDialect>(&mut ast).expect("Should resolve properly.");
     }
-
-    use crate::yul_parser::{parse_block, parse_expression};
 
     #[test]
     fn test_resolve_inside() {
         let source = "{ let x := 7 function f(a, b) -> c {} let y := 9 }";
         let mut block = parse_block(&source).unwrap();
-        resolve::<EVMDialect>(&mut block);
+        resolve::<EVMDialect>(&mut block).expect("Should resolve properly.");
         let mut expr_x = parse_expression(&"x").unwrap();
         let mut expr_f = parse_expression(&"f").unwrap();
         let mut expr_y = parse_expression(&"y").unwrap();
-        resolve_inside::<EVMDialect>(&mut expr_x, &block);
+        resolve_inside::<EVMDialect>(&mut expr_x, &block).expect("");
         assert_eq!(
             expr_x,
             Expression::Identifier(Identifier {
@@ -192,7 +217,7 @@ mod tests {
                 location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );
-        resolve_inside::<EVMDialect>(&mut expr_f, &block);
+        resolve_inside::<EVMDialect>(&mut expr_f, &block).expect("");
         assert_eq!(
             expr_f,
             Expression::Identifier(Identifier {
@@ -201,7 +226,7 @@ mod tests {
                 location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );
-        resolve_inside::<EVMDialect>(&mut expr_y, &block);
+        resolve_inside::<EVMDialect>(&mut expr_y, &block).expect("");
         assert_eq!(
             expr_y,
             Expression::Identifier(Identifier {
@@ -209,6 +234,46 @@ mod tests {
                 name: "y".to_string(),
                 location: Some(SourceLocation { start: 2, end: 3 }),
             })
+        );
+    }
+
+    #[test]
+    fn resolve_identifier_not_found() {
+        let source = "{ let x := x }";
+        let mut block = parse_block(&source).unwrap();
+        assert_eq!(
+            resolve::<EVMDialect>(&mut block).unwrap_err(),
+            "Symbol not found: \"x\""
+        );
+    }
+
+    #[test]
+    fn variable_already_declared() {
+        let source = "{ let x := 1 let x := 2 }";
+        let mut block = parse_block(&source).unwrap();
+        assert_eq!(
+            resolve::<EVMDialect>(&mut block).unwrap_err(),
+            "Identifier \"x\" already declared at this point."
+        );
+    }
+
+    #[test]
+    fn function_already_declared() {
+        let source = "{ function f() {} function f() {} }";
+        let mut block = parse_block(&source).unwrap();
+        assert_eq!(
+            resolve::<EVMDialect>(&mut block).unwrap_err(),
+            "Function \"f\" already declared."
+        );
+    }
+
+    #[test]
+    fn multi_error() {
+        let source = "{ let f := g() let f := 1 }";
+        let mut block = parse_block(&source).unwrap();
+        assert_eq!(
+            resolve::<EVMDialect>(&mut block).unwrap_err(),
+            "Symbol not found: \"g\"\nIdentifier \"f\" already declared at this point."
         );
     }
 }
