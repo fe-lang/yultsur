@@ -1,13 +1,21 @@
 use std::fmt;
 
 #[derive(Hash, Clone, PartialEq, Debug)]
+pub struct SourceLocation {
+    pub start: usize,
+    pub end: usize,
+}
+
+#[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Block {
     pub statements: Vec<Statement>,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Literal {
     pub literal: String,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -28,12 +36,14 @@ pub enum IdentifierID {
 pub struct Identifier {
     pub id: IdentifierID,
     pub name: String,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct FunctionCall {
     pub function: Identifier,
     pub arguments: Vec<Expression>,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -42,18 +52,21 @@ pub struct FunctionDefinition {
     pub parameters: Vec<Identifier>,
     pub returns: Vec<Identifier>,
     pub body: Block,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct VariableDeclaration {
     pub variables: Vec<Identifier>,
     pub value: Option<Expression>,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Assignment {
     pub variables: Vec<Identifier>,
     pub value: Expression,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -67,18 +80,21 @@ pub enum Expression {
 pub struct If {
     pub condition: Expression,
     pub body: Block,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Case {
     pub literal: Option<Literal>,
     pub body: Block,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
 pub struct Switch {
     pub expression: Expression,
     pub cases: Vec<Case>,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -87,6 +103,7 @@ pub struct ForLoop {
     pub condition: Expression,
     pub post: Block,
     pub body: Block,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -105,19 +122,27 @@ pub enum Statement {
 }
 
 impl Identifier {
-    pub fn new(identifier: &str, id: IdentifierID) -> Self {
+    pub fn new(identifier: &str, id: IdentifierID, location: Option<SourceLocation>) -> Self {
         Identifier {
             id,
             name: identifier.to_string(),
+            location: location,
         }
     }
 }
 
 impl Literal {
-    pub fn new(literal: &str) -> Self {
+    pub fn new(literal: &str, location: Option<SourceLocation>) -> Self {
         Literal {
             literal: literal.to_string(),
+            location: location,
         }
+    }
+}
+
+impl fmt::Display for SourceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}-{}", self.start, self.end)
     }
 }
 
@@ -309,7 +334,8 @@ mod tests {
     fn literal() {
         assert_eq!(
             Literal {
-                literal: "testliteral".to_string()
+                literal: "testliteral".to_string(),
+                location: None,
             }
             .to_string(),
             "testliteral"
@@ -321,7 +347,8 @@ mod tests {
         assert_eq!(
             Identifier {
                 id: IdentifierID::UnresolvedReference,
-                name: "testidentifier".to_string()
+                name: "testidentifier".to_string(),
+                location: None,
             }
             .to_string(),
             "testidentifier"
@@ -334,17 +361,21 @@ mod tests {
             FunctionCall {
                 function: Identifier {
                     id: IdentifierID::UnresolvedReference,
-                    name: "test".to_string()
+                    name: "test".to_string(),
+                    location: None,
                 },
                 arguments: vec![
                     Expression::Identifier(Identifier {
                         id: IdentifierID::UnresolvedReference,
-                        name: "test".to_string()
+                        name: "test".to_string(),
+                        location: None,
                     }),
                     Expression::Literal(Literal {
-                        literal: "literal".to_string()
+                        literal: "literal".to_string(),
+                        location: None,
                     }),
                 ],
+                location: None,
             }
             .to_string(),
             "test(test, literal)"
@@ -356,9 +387,14 @@ mod tests {
         assert_eq!(
             If {
                 condition: Expression::Literal(Literal {
-                    literal: "literal".to_string()
+                    literal: "literal".to_string(),
+                    location: None,
                 }),
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "if literal { }"
@@ -367,14 +403,25 @@ mod tests {
 
     #[test]
     fn block_empty() {
-        assert_eq!(Block { statements: vec![] }.to_string(), "{ }");
+        assert_eq!(
+            Block {
+                statements: vec![],
+                location: None,
+            }
+            .to_string(),
+            "{ }"
+        );
     }
 
     #[test]
     fn block_nested() {
         assert_eq!(
             Block {
-                statements: vec![Statement::Block(Block { statements: vec![] })],
+                statements: vec![Statement::Block(Block {
+                    statements: vec![],
+                    location: None,
+                })],
+                location: None,
             }
             .to_string(),
             "{ { } }"
@@ -386,8 +433,10 @@ mod tests {
         assert_eq!(
             Block {
                 statements: vec![Statement::Expression(Expression::Literal(Literal {
-                    literal: "literal".to_string()
+                    literal: "literal".to_string(),
+                    location: None,
                 }))],
+                location: None,
             }
             .to_string(),
             "{ literal }"
@@ -401,10 +450,13 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
+                    location: None,
                 }],
                 value: Expression::Literal(Literal {
-                    literal: "1".to_string()
+                    literal: "1".to_string(),
+                    location: None,
                 }),
+                location: None,
             }
             .to_string(),
             "a := 1"
@@ -419,19 +471,24 @@ mod tests {
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "a".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "b".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::UnresolvedReference,
                         name: "c".to_string(),
+                        location: None,
                     },
                 ],
                 value: Expression::Literal(Literal {
-                    literal: "1".to_string()
+                    literal: "1".to_string(),
+                    location: None,
                 }),
+                location: None,
             }
             .to_string(),
             "a, b, c := 1"
@@ -445,8 +502,10 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
+                    location: None,
                 }],
                 value: None,
+                location: None,
             }
             .to_string(),
             "let a"
@@ -460,10 +519,13 @@ mod tests {
                 variables: vec![Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "a".to_string(),
+                    location: None,
                 }],
                 value: Some(Expression::Literal(Literal {
-                    literal: "1".to_string()
+                    literal: "1".to_string(),
+                    location: None,
                 })),
+                location: None,
             }
             .to_string(),
             "let a := 1"
@@ -478,19 +540,24 @@ mod tests {
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "a".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "b".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "c".to_string(),
+                        location: None,
                     },
                 ],
                 value: Some(Expression::Literal(Literal {
-                    literal: "1".to_string()
+                    literal: "1".to_string(),
+                    location: None,
                 })),
+                location: None,
             }
             .to_string(),
             "let a, b, c := 1"
@@ -504,10 +571,15 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
+                    location: None,
                 },
                 parameters: vec![],
                 returns: vec![],
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "function name() { }"
@@ -521,13 +593,19 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
+                    location: None,
                 },
                 parameters: vec![Identifier {
                     id: IdentifierID::UnresolvedReference,
                     name: "a".to_string(),
+                    location: None,
                 }],
                 returns: vec![],
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "function name(a) { }"
@@ -541,13 +619,19 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
+                    location: None,
                 },
                 parameters: vec![],
                 returns: vec![Identifier {
                     id: IdentifierID::Declaration(2),
                     name: "a".to_string(),
+                    location: None,
                 }],
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "function name() -> a { }"
@@ -561,28 +645,37 @@ mod tests {
                 name: Identifier {
                     id: IdentifierID::Declaration(1),
                     name: "name".to_string(),
+                    location: None,
                 },
                 parameters: vec![
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "a".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::Declaration(3),
                         name: "b".to_string(),
+                        location: None,
                     },
                 ],
                 returns: vec![
                     Identifier {
                         id: IdentifierID::Declaration(1),
                         name: "c".to_string(),
+                        location: None,
                     },
                     Identifier {
                         id: IdentifierID::Declaration(2),
                         name: "d".to_string(),
+                        location: None,
                     },
                 ],
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "function name(a, b) -> c, d { }"
@@ -594,9 +687,14 @@ mod tests {
         assert_eq!(
             Case {
                 literal: Some(Literal {
-                    literal: "literal".to_string()
+                    literal: "literal".to_string(),
+                    location: None,
                 }),
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "case literal { }"
@@ -608,7 +706,11 @@ mod tests {
         assert_eq!(
             Case {
                 literal: None,
-                body: Block { statements: vec![] },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "default { }"
@@ -620,20 +722,31 @@ mod tests {
         assert_eq!(
             Switch {
                 expression: Expression::Literal(Literal {
-                    literal: "3".to_string()
+                    literal: "3".to_string(),
+                    location: None,
                 }),
                 cases: vec![
                     Case {
                         literal: Some(Literal {
-                            literal: "1".to_string()
+                            literal: "1".to_string(),
+                            location: None,
                         }),
-                        body: Block { statements: vec![] },
+                        body: Block {
+                            statements: vec![],
+                            location: None,
+                        },
+                        location: None,
                     },
                     Case {
                         literal: None,
-                        body: Block { statements: vec![] },
+                        body: Block {
+                            statements: vec![],
+                            location: None,
+                        },
+                        location: None,
                     },
                 ],
+                location: None,
             }
             .to_string(),
             "switch 3 case 1 { } default { }"
@@ -644,12 +757,23 @@ mod tests {
     fn forloop() {
         assert_eq!(
             ForLoop {
-                pre: Block { statements: vec![] },
+                pre: Block {
+                    statements: vec![],
+                    location: None,
+                },
                 condition: Expression::Literal(Literal {
-                    literal: "1".to_string()
+                    literal: "1".to_string(),
+                    location: None,
                 }),
-                post: Block { statements: vec![] },
-                body: Block { statements: vec![] },
+                post: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                body: Block {
+                    statements: vec![],
+                    location: None,
+                },
+                location: None,
             }
             .to_string(),
             "for { } 1 { } { }"
@@ -659,7 +783,8 @@ mod tests {
     fn leave() {
         assert_eq!(
             Block {
-                statements: vec![Statement::Leave]
+                statements: vec![Statement::Leave],
+                location: None,
             }
             .to_string(),
             "{ leave }"

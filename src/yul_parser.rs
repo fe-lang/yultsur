@@ -9,6 +9,12 @@ struct BlockParser;
 
 impl Identifier {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let name = pair.as_str().to_string();
 
         // TOOD much nicer to call some function that returns the id
@@ -16,15 +22,23 @@ impl Identifier {
         Identifier {
             id: IdentifierID::Declaration(*next_identifier),
             name,
+            location,
         }
     }
 
     fn from_reference(pair: Pair<Rule>) -> Identifier {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let name = pair.as_str().to_string();
 
         Identifier {
             id: IdentifierID::UnresolvedReference,
             name,
+            location,
         }
     }
 
@@ -57,15 +71,27 @@ impl Identifier {
 
 impl Literal {
     fn from(pair: Pair<Rule>) -> Literal {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let literal = token_iter.next().unwrap().as_str().to_string();
 
-        Literal { literal }
+        Literal { literal, location }
     }
 }
 
 impl FunctionCall {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionCall {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let function = Identifier::from_reference(token_iter.next().unwrap());
         let arguments = token_iter
@@ -78,6 +104,7 @@ impl FunctionCall {
         FunctionCall {
             function,
             arguments,
+            location,
         }
     }
 }
@@ -97,6 +124,12 @@ impl Expression {
 
 impl Case {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Case {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let literal = Literal::from(token_iter.next().unwrap());
         let body = Block::from(token_iter.next().unwrap(), next_identifier);
@@ -104,22 +137,36 @@ impl Case {
         Case {
             literal: Some(literal),
             body,
+            location,
         }
     }
 
     fn from_default(pair: Pair<Rule>, next_identifier: &mut u64) -> Case {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let body = Block::from(token_iter.next().unwrap(), next_identifier);
 
         Case {
             literal: None,
             body,
+            location,
         }
     }
 }
 
 impl Switch {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Switch {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let expression = Expression::from(token_iter.next().unwrap(), next_identifier);
         let cases = token_iter
@@ -130,22 +177,42 @@ impl Switch {
             })
             .collect();
 
-        Switch { expression, cases }
+        Switch {
+            expression,
+            cases,
+            location,
+        }
     }
 }
 
 impl Assignment {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Assignment {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let variables = Identifier::list_reference(token_iter.next().unwrap());
         let value = Expression::from(token_iter.next().unwrap(), next_identifier);
 
-        Assignment { variables, value }
+        Assignment {
+            variables,
+            value,
+            location,
+        }
     }
 }
 
 impl VariableDeclaration {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> VariableDeclaration {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
 
         let variables = Identifier::list(token_iter.next().unwrap(), next_identifier);
@@ -153,12 +220,22 @@ impl VariableDeclaration {
             .next()
             .map(|e| Expression::from(e, next_identifier));
 
-        VariableDeclaration { variables, value }
+        VariableDeclaration {
+            variables,
+            value,
+            location,
+        }
     }
 }
 
 impl FunctionDefinition {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionDefinition {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let name = Identifier::from(token_iter.next().unwrap(), next_identifier);
 
@@ -184,22 +261,39 @@ impl FunctionDefinition {
             parameters,
             returns,
             body,
+            location,
         }
     }
 }
 
 impl If {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> If {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let condition = Expression::from(token_iter.next().unwrap(), next_identifier);
         let body = Block::from(token_iter.next().unwrap(), next_identifier);
 
-        If { condition, body }
+        If {
+            condition,
+            body,
+            location,
+        }
     }
 }
 
 impl ForLoop {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> ForLoop {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut token_iter = pair.into_inner();
         let pre = Block::from(token_iter.next().unwrap(), next_identifier);
         let condition = Expression::from(token_iter.next().unwrap(), next_identifier);
@@ -211,6 +305,7 @@ impl ForLoop {
             condition,
             post,
             body,
+            location,
         }
     }
 }
@@ -242,6 +337,12 @@ impl Statement {
 
 impl Block {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Block {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
         let mut statements: Vec<Statement> = vec![];
         for p in pair.into_inner() {
             match p.as_rule() {
@@ -251,7 +352,11 @@ impl Block {
                 _ => unreachable!(),
             }
         }
-        Block { statements }
+
+        Block {
+            statements,
+            location,
+        }
     }
 }
 
