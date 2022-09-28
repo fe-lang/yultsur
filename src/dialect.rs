@@ -89,7 +89,7 @@ pub trait Dialect {
 }
 
 pub struct Builtin {
-    pub name: String,
+    pub name: &'static str,
     pub parameters: u64,
     pub returns: u64,
 }
@@ -100,11 +100,10 @@ impl Dialect for EVMDialect {
     fn builtin(name: &str) -> Option<Builtin> {
         BUILTINS
             .get(name)
-            .cloned()
             .map(|(name, parameters, returns)| Builtin {
-                name: name.to_string(),
-                parameters,
-                returns,
+                name: *name,
+                parameters: *parameters,
+                returns: *returns,
             })
     }
 }
