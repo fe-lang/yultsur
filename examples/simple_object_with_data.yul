@@ -1,3 +1,4 @@
-object "Simple" { code { }
-data "data1" hex"01020304"
+object "Simple" {
+    code { }
+    data "data1" hex"01020304"
 }

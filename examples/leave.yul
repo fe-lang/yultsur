@@ -1,1 +1,3 @@
-{ function f() { leave } }
+{
+    function f() { leave }
+}
