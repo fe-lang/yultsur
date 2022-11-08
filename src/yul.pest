@@ -1,4 +1,10 @@
-block = { soi? ~ "{" ~ (statement)* ~ "}" ~ eoi? }
+root = { soi ~ (object | block) ~ eoi  }
+
+object = { "object" ~ string_literal ~ "{" ~ code ~ (data)* ~ "}" }
+code = { "code" ~ block }
+data = { "data" ~ string_literal ~ hex_literal }
+
+block = { "{" ~ (statement)* ~ "}" }
 
 statement = {
 	(block

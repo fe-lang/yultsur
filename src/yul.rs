@@ -1,9 +1,42 @@
 use std::fmt;
 
-#[derive(Hash, Clone, PartialEq, Debug)]
+#[derive(Hash, Clone, PartialEq, Eq, Debug)]
 pub struct SourceLocation {
     pub start: usize,
     pub end: usize,
+}
+
+#[derive(Hash, Clone, PartialEq, Debug)]
+pub enum InnerRoot {
+    Object(Object),
+    Block(Block),
+}
+
+#[derive(Hash, Clone, PartialEq, Debug)]
+pub struct Root {
+    pub inner: InnerRoot,
+    pub location: Option<SourceLocation>,
+}
+
+#[derive(Hash, Clone, PartialEq, Debug)]
+pub struct Object {
+    pub name: String,
+    pub code: Code,
+    pub data: Vec<Data>,
+    pub location: Option<SourceLocation>,
+}
+
+#[derive(Hash, Clone, PartialEq, Debug)]
+pub struct Code {
+    pub body: Block,
+    pub location: Option<SourceLocation>,
+}
+
+#[derive(Hash, Clone, PartialEq, Eq, Debug)]
+pub struct Data {
+    pub name: String,
+    pub data: String,
+    pub location: Option<SourceLocation>,
 }
 
 #[derive(Hash, Clone, PartialEq, Debug)]
@@ -12,13 +45,13 @@ pub struct Block {
     pub location: Option<SourceLocation>,
 }
 
-#[derive(Hash, Clone, PartialEq, Debug)]
+#[derive(Hash, Clone, PartialEq, Eq, Debug)]
 pub struct Literal {
     pub literal: String,
     pub location: Option<SourceLocation>,
 }
 
-#[derive(Hash, Clone, PartialEq, Debug)]
+#[derive(Hash, Clone, PartialEq, Eq, Debug)]
 pub enum IdentifierID {
     /// This is where the identifier is declared.
     /// The parameter is unique across the program.
@@ -32,7 +65,7 @@ pub enum IdentifierID {
     UnresolvedReference,
 }
 
-#[derive(Hash, Clone, PartialEq, Debug)]
+#[derive(Hash, Clone, PartialEq, Eq, Debug)]
 pub struct Identifier {
     pub id: IdentifierID,
     pub name: String,
@@ -323,6 +356,43 @@ impl fmt::Display for Block {
             write!(f, " {}", statement)?;
         }
         write!(f, " }}")
+    }
+}
+
+impl fmt::Display for Object {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "object {} {{ {}\n{}\n}}",
+            self.name,
+            self.code,
+            self.data
+                .iter()
+                .map(|data| format!("{}", data))
+                .collect::<Vec<String>>()
+                .join("\n")
+        )
+    }
+}
+
+impl fmt::Display for Code {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "code {}", self.body)
+    }
+}
+
+impl fmt::Display for Data {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "data {} {}", self.name, self.data)
+    }
+}
+
+impl fmt::Display for Root {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self.inner {
+            InnerRoot::Object(obj) => write!(f, "{}", obj),
+            InnerRoot::Block(block) => write!(f, "{}", block),
+        }
     }
 }
 

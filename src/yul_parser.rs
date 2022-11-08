@@ -5,7 +5,7 @@ use pest::Parser;
 
 #[derive(Parser)]
 #[grammar = "yul.pest"]
-struct BlockParser;
+struct YulParser;
 
 impl Identifier {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
@@ -335,6 +335,68 @@ impl Statement {
     }
 }
 
+impl Data {
+    fn from(pair: Pair<Rule>) -> Data {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
+        let mut token_iter = pair.into_inner();
+        let name = token_iter.next().unwrap().as_str().to_string();
+        let data = token_iter.next().unwrap().as_str().to_string();
+
+        Data {
+            name,
+            data,
+            location,
+        }
+    }
+}
+
+impl Code {
+    fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Code {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
+        let mut token_iter = pair.into_inner();
+        let body = Block::from(token_iter.next().unwrap(), next_identifier);
+
+        Code { body, location }
+    }
+}
+
+impl Object {
+    fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Object {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
+        let mut token_iter = pair.into_inner();
+        let name = token_iter.next().unwrap().as_str().to_string();
+        let code = Code::from(token_iter.next().unwrap(), next_identifier);
+        let data = token_iter
+            .map(|p| match p.as_rule() {
+                Rule::data => Data::from(p),
+                _ => unreachable!(),
+            })
+            .collect();
+
+        Object {
+            name,
+            code,
+            location,
+            data,
+        }
+    }
+}
+
 impl Block {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Block {
         let span = pair.clone().into_span();
@@ -360,19 +422,53 @@ impl Block {
     }
 }
 
-pub fn parse_block(source: &str) -> Result<Block, String> {
-    match BlockParser::parse(Rule::block, source) {
+impl Root {
+    fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Root {
+        let span = pair.clone().into_span();
+        let location = Some(SourceLocation {
+            start: span.start(),
+            end: span.end(),
+        });
+
+        let mut token_iter = pair.into_inner();
+        let p = token_iter.next().unwrap();
+        let inner = match p.as_rule() {
+            Rule::object => InnerRoot::Object(Object::from(p, next_identifier)),
+            Rule::block => InnerRoot::Block(Block::from(p, next_identifier)),
+            _ => unreachable!(),
+        };
+
+        Root { inner, location }
+    }
+}
+
+pub fn parse_root(source: &str) -> Result<Root, String> {
+    match YulParser::parse(Rule::root, source) {
         Ok(mut pairs) => {
             let mut next_identifier = 1u64;
-            Ok(Block::from(pairs.next().unwrap(), &mut next_identifier))
+            Ok(Root::from(pairs.next().unwrap(), &mut next_identifier))
         }
         Err(error) => Err(format!("{}", error)),
     }
 }
 
+pub fn parse_block(source: &str) -> Result<Block, String> {
+    match parse_root(source)?.inner {
+        InnerRoot::Block(block) => Ok(block),
+        _ => unreachable!(),
+    }
+}
+
+pub fn parse_object(source: &str) -> Result<Object, String> {
+    match parse_root(source)?.inner {
+        InnerRoot::Object(obj) => Ok(obj),
+        _ => unreachable!(),
+    }
+}
+
 pub fn parse_expression(source: &str) -> Result<Expression, String> {
     let block_source = format!("{{ {} }}", source);
-    match BlockParser::parse(Rule::block, block_source.as_str()) {
+    match YulParser::parse(Rule::block, block_source.as_str()) {
         Err(error) => Err(format!("{}", error)),
         Ok(mut pairs) => {
             let mut next_identifier = 1u64;
@@ -458,6 +554,21 @@ mod tests {
     }
 
     #[test]
+    fn simple_object() {
+        test_file("examples/simple_object.yul");
+    }
+
+    #[test]
+    fn simple_object_with_data() {
+        test_file("examples/simple_object_with_data.yul");
+    }
+
+    #[test]
+    fn simple_object_multi_data() {
+        test_file("examples/simple_object_multi_data.yul");
+    }
+
+    #[test]
     fn comments() {
         let source = "{ /* abc */ let x // def\n := 7 }// xx";
         let block = parse_block(&source).unwrap();
@@ -466,7 +577,7 @@ mod tests {
 
     fn test_file(filename: &str) {
         let source = read_to_string(filename).unwrap();
-        let block = parse_block(&source).unwrap();
-        assert_eq!(source, block.to_string());
+        let root = parse_root(&source).unwrap();
+        assert_eq!(source, root.to_string());
     }
 }
