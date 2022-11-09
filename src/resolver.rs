@@ -202,11 +202,11 @@ mod tests {
     #[test]
     fn test_resolve_inside() {
         let source = "{ let x := 7 function f(a, b) -> c {} let y := 9 }";
-        let mut block = parse_block(&source).unwrap();
+        let mut block = parse_block(source).unwrap();
         resolve::<EVMDialect>(&mut block).expect("Should resolve properly.");
-        let mut expr_x = parse_expression(&"x").unwrap();
-        let mut expr_f = parse_expression(&"f").unwrap();
-        let mut expr_y = parse_expression(&"y").unwrap();
+        let mut expr_x = parse_expression("x").unwrap();
+        let mut expr_f = parse_expression("f").unwrap();
+        let mut expr_y = parse_expression("y").unwrap();
         resolve_inside::<EVMDialect>(&mut expr_x, &block).expect("");
         assert_eq!(
             expr_x,
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn resolve_identifier_not_found() {
         let source = "{ let x := x }";
-        let mut block = parse_block(&source).unwrap();
+        let mut block = parse_block(source).unwrap();
         assert_eq!(
             resolve::<EVMDialect>(&mut block).unwrap_err(),
             "Symbol not found: \"x\""
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn variable_already_declared() {
         let source = "{ let x := 1 let x := 2 }";
-        let mut block = parse_block(&source).unwrap();
+        let mut block = parse_block(source).unwrap();
         assert_eq!(
             resolve::<EVMDialect>(&mut block).unwrap_err(),
             "Identifier \"x\" already declared at this point."
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn function_already_declared() {
         let source = "{ function f() {} function f() {} }";
-        let mut block = parse_block(&source).unwrap();
+        let mut block = parse_block(source).unwrap();
         assert_eq!(
             resolve::<EVMDialect>(&mut block).unwrap_err(),
             "Function \"f\" already declared."
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn multi_error() {
         let source = "{ let f := g() let f := 1 }";
-        let mut block = parse_block(&source).unwrap();
+        let mut block = parse_block(source).unwrap();
         assert_eq!(
             resolve::<EVMDialect>(&mut block).unwrap_err(),
             "Symbol not found: \"g\"\nIdentifier \"f\" already declared at this point."

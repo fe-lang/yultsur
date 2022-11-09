@@ -1,1 +1,3 @@
-{ function power(input) -> result { } }
+{
+    function power(input) -> result { }
+}

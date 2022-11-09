@@ -311,11 +311,16 @@ impl fmt::Display for Case {
 
 impl fmt::Display for Switch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "switch {}", self.expression)?;
-        for case in &self.cases {
-            write!(f, " {}", case)?;
-        }
-        write!(f, "")
+        write!(
+            f,
+            "switch {}\n{}",
+            self.expression,
+            self.cases
+                .iter()
+                .map(|c| c.to_string())
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
     }
 }
 
@@ -351,11 +356,19 @@ impl fmt::Display for Statement {
 
 impl fmt::Display for Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{")?;
-        for (_, statement) in self.statements.iter().enumerate() {
-            write!(f, " {}", statement)?;
+        let statements = self
+            .statements
+            .iter()
+            .map(|s| format!("{}", s))
+            .collect::<Vec<_>>()
+            .join("\n");
+        if statements.is_empty() {
+            write!(f, "{{ }}")
+        } else if statements.len() >= 20 || statements.contains('\n') {
+            write!(f, "{{\n    {}\n}}", statements.replace('\n', "\n    "))
+        } else {
+            write!(f, "{{ {} }}", statements)
         }
-        write!(f, " }}")
     }
 }
 
@@ -363,14 +376,14 @@ impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "object {} {{ {}\n{}\n}}",
+            "object {} {{\n{}\n{}}}",
             self.name,
-            self.code,
+            format!("    {}", self.code).replace('\n', "\n    "),
             self.data
                 .iter()
-                .map(|data| format!("{}", data))
+                .map(|data| format!("    {}\n", data))
                 .collect::<Vec<String>>()
-                .join("\n")
+                .join("")
         )
     }
 }
@@ -819,7 +832,7 @@ mod tests {
                 location: None,
             }
             .to_string(),
-            "switch 3 case 1 { } default { }"
+            "switch 3\ncase 1 { }\ndefault { }"
         );
     }
 

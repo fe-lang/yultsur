@@ -505,7 +505,7 @@ mod tests {
 
     #[test]
     fn if_statement() {
-        test_file("examples/if.yul");
+        test_file("examples/if_statement.yul");
     }
 
     #[test]
@@ -524,12 +524,12 @@ mod tests {
     }
 
     #[test]
-    fn empty_nested_blocks() {
+    fn nested_blocks() {
         test_file("examples/nested_blocks.yul");
     }
 
     #[test]
-    fn empty_function() {
+    fn power_function_signature() {
         test_file("examples/power_function_signature.yul");
     }
 
@@ -569,15 +569,25 @@ mod tests {
     }
 
     #[test]
+    fn object_with_code() {
+        test_file("examples/object_with_code.yul");
+    }
+
+    #[test]
     fn comments() {
         let source = "{ /* abc */ let x // def\n := 7 }// xx";
-        let block = parse_block(&source).unwrap();
+        let block = parse_block(source).unwrap();
         assert_eq!(block.to_string(), "{ let x := 7 }");
     }
 
     fn test_file(filename: &str) {
         let source = read_to_string(filename).unwrap();
         let root = parse_root(&source).unwrap();
-        assert_eq!(source, root.to_string());
+        let root_str = root.to_string();
+        assert_eq!(
+            source, root_str,
+            "Parsing-re-printing mismatch:\nsource:\n{}\n-----\nre-printed:\n{}\n",
+            source, root_str
+        );
     }
 }
