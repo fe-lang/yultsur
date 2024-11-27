@@ -1,8 +1,9 @@
-use crate::visitor::ASTModifier;
-use crate::yul::*;
-use std::{collections::BTreeMap, collections::HashMap, marker::PhantomData};
+use std::{
+    collections::{BTreeMap, HashMap},
+    marker::PhantomData,
+};
 
-use crate::dialect::Dialect;
+use crate::{dialect::Dialect, visitor::ASTModifier, yul::*};
 
 /// Resolves all references in the given AST and returns a
 /// hash map from id to function signature for each user-defined function.
@@ -16,8 +17,8 @@ pub fn resolve<D: Dialect>(ast: &mut Block) -> Result<BTreeMap<u64, FunctionSign
     }
 }
 
-/// Resolves all references in `to_resolve` given an already resolved ast `reference`.
-/// This can be used to resolve e.g. an expression to be evaluated.
+/// Resolves all references in `to_resolve` given an already resolved ast
+/// `reference`. This can be used to resolve e.g. an expression to be evaluated.
 /// This only considers symbols defined at the top level of the reference block.
 pub fn resolve_inside<D: Dialect>(
     to_resolve: &mut Expression,
@@ -157,7 +158,7 @@ impl<D: Dialect> ASTModifier for Resolver<D> {
     fn exit_variable_declaration(&mut self, variables: &mut VariableDeclaration) {
         self.exit_variable_declaration_immut(variables);
     }
-    fn exit_identifier(&mut self, mut identifier: &mut Identifier) {
+    fn exit_identifier(&mut self, identifier: &mut Identifier) {
         if identifier.id == IdentifierID::UnresolvedReference {
             identifier.id = self.resolve(&identifier.name);
         }
@@ -177,8 +178,10 @@ impl<D: Dialect> ASTModifier for Resolver<D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialect::EVMDialect;
-    use crate::yul_parser::{parse_block, parse_expression};
+    use crate::{
+        dialect::EVMDialect,
+        yul_parser::{parse_block, parse_expression},
+    };
 
     #[test]
     fn with_dialect() {
@@ -213,7 +216,8 @@ mod tests {
             Expression::Identifier(Identifier {
                 id: IdentifierID::Reference(2),
                 name: "x".to_string(),
-                // NOTE: It's not 0-1 because parse_expression() internally converts the expression to `{ x }`
+                // NOTE: It's not 0-1 because parse_expression() internally converts the expression
+                // to `{ x }`
                 location: Some(SourceLocation { start: 2, end: 3 }),
             })
         );

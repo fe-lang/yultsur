@@ -23,6 +23,7 @@ pub struct Object {
     pub name: String,
     pub code: Code,
     pub data: Vec<Data>,
+    pub objects: Vec<Object>,
     pub location: Option<SourceLocation>,
 }
 

@@ -1,7 +1,6 @@
-use crate::yul::*;
+use pest::{iterators::Pair, Parser};
 
-use pest::iterators::Pair;
-use pest::Parser;
+use crate::yul::*;
 
 #[derive(Parser)]
 #[grammar = "yul.pest"]
@@ -381,17 +380,26 @@ impl Object {
         let mut token_iter = pair.into_inner();
         let name = token_iter.next().unwrap().as_str().to_string();
         let code = Code::from(token_iter.next().unwrap(), next_identifier);
-        let data = token_iter
-            .map(|p| match p.as_rule() {
-                Rule::data => Data::from(p),
+        let mut data = Vec::new();
+        let mut objects = Vec::new();
+        for item in token_iter {
+            match item.as_rule() {
+                Rule::data => {
+                    data.push(Data::from(item));
+                }
+                Rule::object => {
+                    objects.push(Object::from(item, next_identifier));
+                }
+
                 _ => unreachable!(),
-            })
-            .collect();
+            }
+        }
 
         Object {
             name,
             code,
             location,
+            objects,
             data,
         }
     }
@@ -484,9 +492,9 @@ pub fn parse_expression(source: &str) -> Result<Expression, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use std::fs::read_to_string;
+
+    use super::*;
 
     #[test]
     fn continue_statement() {
