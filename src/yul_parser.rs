@@ -8,7 +8,7 @@ struct YulParser;
 
 impl Identifier {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Identifier {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -26,7 +26,7 @@ impl Identifier {
     }
 
     fn from_reference(pair: Pair<Rule>) -> Identifier {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -70,7 +70,7 @@ impl Identifier {
 
 impl Literal {
     fn from(pair: Pair<Rule>) -> Literal {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -85,7 +85,7 @@ impl Literal {
 
 impl FunctionCall {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionCall {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -123,7 +123,7 @@ impl Expression {
 
 impl Case {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Case {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -141,7 +141,7 @@ impl Case {
     }
 
     fn from_default(pair: Pair<Rule>, next_identifier: &mut u64) -> Case {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -160,7 +160,7 @@ impl Case {
 
 impl Switch {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Switch {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -186,7 +186,7 @@ impl Switch {
 
 impl Assignment {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Assignment {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -206,7 +206,7 @@ impl Assignment {
 
 impl VariableDeclaration {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> VariableDeclaration {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -229,7 +229,7 @@ impl VariableDeclaration {
 
 impl FunctionDefinition {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> FunctionDefinition {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -267,7 +267,7 @@ impl FunctionDefinition {
 
 impl If {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> If {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -287,7 +287,7 @@ impl If {
 
 impl ForLoop {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> ForLoop {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -336,7 +336,7 @@ impl Statement {
 
 impl Data {
     fn from(pair: Pair<Rule>) -> Data {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -356,7 +356,7 @@ impl Data {
 
 impl Code {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Code {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -371,7 +371,7 @@ impl Code {
 
 impl Object {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Object {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -407,7 +407,7 @@ impl Object {
 
 impl Block {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Block {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),
@@ -432,7 +432,7 @@ impl Block {
 
 impl Root {
     fn from(pair: Pair<Rule>, next_identifier: &mut u64) -> Root {
-        let span = pair.clone().into_span();
+        let span = pair.clone().as_span();
         let location = Some(SourceLocation {
             start: span.start(),
             end: span.end(),

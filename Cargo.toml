@@ -11,6 +11,6 @@ description = "Yultsur (or Yülçür) is a toolkit for Yul."
 keywords = ["yul", "ethereum", "solidity"]
 
 [dependencies]
-pest = "^1.0"
-pest_derive = "^1.0"
+pest = "^2.0"
+pest_derive = "^2.0"
 phf = { version = "0.11.1", features = ["macros"] }

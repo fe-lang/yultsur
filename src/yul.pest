@@ -1,4 +1,7 @@
-root = { soi ~ (object | block) ~ eoi  }
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _ { ( "/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!"\n" ~ ANY )* ~ "\n"? ) }
+
+root = { SOI ~ (object | block) ~ EOI  }
 
 object = { "object" ~ string_literal ~ "{" ~ code ~ (data | object)* ~ "}" }
 code = { "code" ~ block }
@@ -64,7 +67,7 @@ number_literal = { hex_number | decimal_number }
 
 hex_literal = { "hex" ~ ("\"" ~ (('0'..'9' | 'a'..'f' | 'A'..'F'){2})* ~ "\"" | "\'" ~ (('0'..'9' | 'a'..'f' | 'A'..'F'){2})* ~ "\'") } // FIXME: can be refactored into "hex_byte"
 
-string_literal = { "\"" ~ ((!("\\" | "\n" | "\r" | "\"") ~ any) | "\\" ~ (!( "\n" ) ~ any))* ~ "\"" }
+string_literal = { "\"" ~ ((!("\\" | "\n" | "\r" | "\"") ~ ANY) | "\\" ~ (!( "\n" ) ~ ANY))* ~ "\"" }
 
 true_literal = { "true" }
 
@@ -78,5 +81,3 @@ alpha = _ { 'a'..'z' | 'A'..'Z' }
 
 digit = _ { '0'..'9' }
 
-whitespace = _ { " " | "\t" | "\n" }
-comment = _ { ( "/*" ~ (!"*/" ~ any)* ~ "*/" | "//" ~ (!"\n" ~ any )* ~ "\n"? ) }
